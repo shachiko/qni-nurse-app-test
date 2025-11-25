@@ -3,526 +3,648 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QNI-NurseGuard - Giám sát Quy trình</title>
-    <!-- Tải Tailwind CSS -->
+    <title>QNI-NurseGuard - Quản trị Hệ thống</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tải thư viện biểu đồ Chart.js (để làm báo cáo đẹp hơn) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Sử dụng font Inter cho giao diện sạch sẽ */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Ẩn các view (màn hình) ban đầu */
-        .view {
-            display: none;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .view { display: none; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-slate-100 text-slate-800">
 
-    <!-- Container chính của ứng dụng -->
-    <div class="container mx-auto max-w-4xl p-4 min-h-screen">
+    <div class="container mx-auto max-w-5xl p-4 min-h-screen pb-20">
 
-        <!-- Header chung -->
-        <header class="bg-white shadow-md rounded-lg p-4 mb-6 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold text-blue-700">QNI-NurseGuard</h1>
-                <p class="text-sm text-gray-500">Bệnh viện Đa khoa tỉnh Quảng Ninh</p>
+        <!-- Header -->
+        <header class="bg-white shadow-sm rounded-xl p-4 mb-6 flex justify-between items-center sticky top-2 z-50">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 text-white p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v12"/><path d="M6 12h12"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800">QNI-NurseGuard</h1>
+                    <p class="text-xs text-slate-500">BVĐK Tỉnh Quảng Ninh</p>
+                </div>
             </div>
-            <div id="userInfo" class="text-right">
-                <!-- Thông tin người dùng sẽ hiển thị ở đây -->
-            </div>
+            <div id="userInfo" class="text-right text-sm"></div>
         </header>
 
-        <!-- (VIEW 1) Màn hình Đăng nhập -->
-        <div id="loginView" class="view bg-white p-8 rounded-lg shadow-lg max-w-md mx-auto">
-            <h2 class="text-xl font-semibold text-center mb-6">Đăng nhập hệ thống</h2>
+        <!-- (VIEW 1) Đăng nhập -->
+        <div id="loginView" class="view bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto mt-10">
+            <h2 class="text-2xl font-bold text-center mb-6 text-slate-800">Đăng nhập</h2>
             <div class="mb-4">
-                <label for="userSelect" class="block text-sm font-medium text-gray-700 mb-2">Chọn vai trò của bạn:</label>
-                <select id="userSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <label class="block text-sm font-medium text-slate-600 mb-2">Vai trò:</label>
+                <select id="userSelect" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                     <option value="nurse_a">Điều dưỡng: Nguyễn Thị A</option>
                     <option value="nurse_b">Điều dưỡng: Trần Văn B</option>
                     <option value="manager">Quản lý: Điều dưỡng trưởng</option>
                 </select>
             </div>
-            <button onclick="login()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">
-                Đăng nhập
+            <button onclick="login()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200">
+                Truy cập Hệ thống
             </button>
+            <p class="mt-4 text-xs text-center text-slate-400">Phiên bản V3.0 - Admin có thể thêm quy trình</p>
         </div>
 
-        <!-- (VIEW 2) Màn hình chính - Điều dưỡng -->
+        <!-- (VIEW 2) Dashboard Điều dưỡng -->
         <div id="nurseDashboardView" class="view">
-            <h2 class="text-xl font-semibold mb-4">Quy trình kỹ thuật cần thực hiện</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Card cho quy trình tiêm -->
-                <div class="procedure-card bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200">
-                    <h3 class="font-bold text-lg text-blue-700">Tiêm tĩnh mạch</h3>
-                    <p class="text-sm text-gray-600 mt-2 mb-4">Quy trình kỹ thuật tiêm tĩnh mạch theo chuẩn Bộ Y tế.</p>
-                    <button onclick="startProcedure('iv_injection')" class="w-full bg-green-600 text-white p-2 rounded-lg font-semibold hover:bg-green-700">
-                        Bắt đầu thực hiện
-                    </button>
-                </div>
-                <!-- Card cho quy trình thay băng -->
-                <div class="procedure-card bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200">
-                    <h3 class="font-bold text-lg text-orange-700">Thay băng vết mổ</h3>
-                    <p class="text-sm text-gray-600 mt-2 mb-4">Quy trình thay băng và chăm sóc vết mổ sạch.</p>
-                    <button onclick="startProcedure('dressing_change')" class="w-full bg-green-600 text-white p-2 rounded-lg font-semibold hover:bg-green-700">
-                        Bắt đầu thực hiện
-                    </button>
-                </div>
-                <!-- Thêm các quy trình khác ở đây -->
-                <div class="procedure-card bg-white p-6 rounded-lg shadow-lg opacity-50">
-                    <h3 class="font-bold text-lg text-gray-500">Chăm sóc người bệnh thở máy</h3>
-                    <p class="text-sm text-gray-500 mt-2 mb-4">(Sắp ra mắt)</p>
-                    <button class="w-full bg-gray-400 text-white p-2 rounded-lg font-semibold cursor-not-allowed">
-                        Bắt đầu thực hiện
-                    </button>
-                </div>
+            <div class="flex justify-between items-end mb-4">
+                <h2 class="text-xl font-bold text-slate-800">Danh mục kỹ thuật</h2>
+                <button onclick="resetData()" class="text-xs text-red-400 hover:text-red-600 underline">Reset dữ liệu gốc</button>
+            </div>
+            
+            <!-- Grid này sẽ được render bằng JS -->
+            <div id="procedureGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Nội dung động -->
             </div>
         </div>
 
-        <!-- (VIEW 3) Màn hình Bảng kiểm Quy trình -->
+        <!-- (VIEW 3) Checklist -->
         <div id="procedureChecklistView" class="view">
-            <button onclick="showView('nurseDashboardView')" class="mb-4 text-blue-600 hover:text-blue-800">
-                &larr; Quay lại Dashboard
+            <button onclick="showView('nurseDashboardView')" class="mb-4 flex items-center text-slate-500 hover:text-blue-600 text-sm font-medium transition">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mr-1"><path d="m15 18-6-6 6-6"/></svg> Quay lại
             </button>
-            <div class="bg-white p-8 rounded-lg shadow-lg">
-                <h2 id="checklistTitle" class="text-xl font-bold mb-2"></h2>
-                <p class="text-sm text-gray-500 mb-6">Mô phỏng AI giám sát: Vui lòng tích vào từng bước khi bạn hoàn thành.</p>
-                <div id="checklistSteps" class="space-y-3">
-                    <!-- Các bước trong bảng kiểm sẽ được JS chèn vào đây -->
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg border-t-4 border-blue-600">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 id="checklistTitle" class="text-2xl font-bold text-slate-800"></h2>
+                        <p class="text-sm text-slate-500">Hãy trung thực, AI sẽ phân tích hành vi của bạn.</p>
+                    </div>
+                    <div class="bg-blue-50 text-blue-700 px-3 py-1 rounded text-xs font-bold uppercase tracking-wide">Giám sát</div>
                 </div>
+                
+                <div id="checklistSteps" class="space-y-3 mb-8"></div>
+                
                 <input type="hidden" id="currentProcedureKey">
-                <button onclick="submitChecklist()" class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 mt-8">
-                    Hoàn thành & Gửi AI Phân tích
+                <button onclick="submitChecklist()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200 flex justify-center items-center gap-2">
+                    <span>Hoàn thành & Phân tích</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
                 </button>
             </div>
         </div>
 
-        <!-- (VIEW 4) Màn hình Phản hồi của AI -->
+        <!-- (VIEW 4) AI Feedback -->
         <div id="aiFeedbackView" class="view">
-            <div class="bg-white p-8 rounded-lg shadow-lg max-w-lg mx-auto text-center">
-                <h2 class="text-xl font-bold mb-4">Phân tích từ AI</h2>
-                <div id="feedbackContent">
-                    <!-- Nội dung phản hồi của AI sẽ được chèn vào đây -->
+            <div class="max-w-xl mx-auto">
+                <div class="bg-white p-8 rounded-2xl shadow-xl text-center">
+                    <h2 class="text-xl font-bold mb-6 text-slate-800">Kết quả Phân tích AI</h2>
+                    <div id="feedbackContent"></div>
+                    <div class="mt-8 flex gap-3">
+                        <button onclick="showView('nurseDashboardView')" class="flex-1 bg-slate-100 text-slate-700 p-3 rounded-lg font-semibold hover:bg-slate-200">Về trang chủ</button>
+                        <button onclick="redoProcedure()" class="flex-1 bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700">Làm lại</button>
+                    </div>
                 </div>
-                <button onclick="showView('nurseDashboardView')" class="mt-6 bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">
-                    Trở về Dashboard
-                </button>
             </div>
         </div>
 
-        <!-- (VIEW 5) Màn hình Quản lý -->
+        <!-- (VIEW 5) Manager Dashboard -->
         <div id="managerDashboardView" class="view">
-            <h2 class="text-xl font-semibold mb-4">Báo cáo Tuân thủ Quy trình (Toàn khoa)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Thống kê chung -->
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="font-bold text-lg mb-4">Tổng quan Tuân thủ</h3>
-                    <div class="space-y-3">
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span class="text-sm font-medium text-blue-700">Tiêm tĩnh mạch</span>
-                                <span id="complianceRate-iv_injection" class="text-sm font-medium text-blue-700"></span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-4">
-                                <div id="complianceBar-iv_injection" class="bg-blue-600 h-4 rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span class="text-sm font-medium text-orange-700">Thay băng vết mổ</span>
-                                <span id="complianceRate-dressing_change" class="text-sm font-medium text-orange-700"></span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-4">
-                                <div id="complianceBar-dressing_change" class="bg-orange-500 h-4 rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-slate-800">Trung tâm Điều hành</h2>
+                <button onclick="showView('addProcedureView')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 flex items-center gap-2 shadow-lg shadow-green-200">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Thêm Quy trình
+                </button>
+            </div>
+            
+            <!-- Top Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-xs text-slate-400 uppercase font-bold">Tổng lượt thực hiện</p>
+                    <p class="text-2xl font-bold text-slate-800" id="statTotalCount">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-xs text-slate-400 uppercase font-bold">Tỷ lệ tuân thủ TB</p>
+                    <p class="text-2xl font-bold text-blue-600" id="statAvgCompliance">0%</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-xs text-slate-400 uppercase font-bold">Lỗi nghiêm trọng</p>
+                    <p class="text-2xl font-bold text-red-500" id="statCriticalErrors">0</p>
+                </div>
+                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-xs text-slate-400 uppercase font-bold">NV Xuất sắc nhất</p>
+                    <p class="text-lg font-bold text-green-600 truncate" id="statBestNurse">-</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-lg mb-4 text-slate-700">Xu hướng Tuân thủ (7 ngày)</h3>
+                    <canvas id="complianceChart" height="150"></canvas>
+                </div>
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                        <h3 class="font-bold text-lg mb-4 text-slate-700">Bảng Vinh danh</h3>
+                        <div id="leaderboardList" class="space-y-3"></div>
+                    </div>
+                    <div class="bg-red-50 p-6 rounded-xl border border-red-100">
+                        <h3 class="font-bold text-lg mb-3 text-red-800">Cảnh báo lỗi</h3>
+                        <ul id="commonErrorsList" class="list-disc list-inside text-sm text-red-700 space-y-1"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- (VIEW 6 - NEW) Add Procedure View -->
+        <div id="addProcedureView" class="view">
+            <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-6 text-slate-800">Thêm Quy trình Mới</h2>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Tên Quy trình kỹ thuật</label>
+                    <input type="text" id="newProcTitle" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ví dụ: Đặt ống thông dạ dày...">
+                </div>
+
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-slate-700">Các bước thực hiện</label>
+                        <button onclick="addNewStepRow()" class="text-sm text-blue-600 hover:underline">+ Thêm bước</button>
+                    </div>
+                    <div id="newProcSteps" class="space-y-2 max-h-96 overflow-y-auto p-2 bg-slate-50 rounded-lg border border-slate-200">
+                        <!-- Rows injected here -->
                     </div>
                 </div>
 
-                <!-- Lỗi thường gặp -->
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h3 class="font-bold text-lg mb-4">Các lỗi thường gặp nhất</h3>
-                    <ul id="commonErrorsList" class="list-disc list-inside space-y-2 text-sm text-red-600">
-                        <!-- Danh sách lỗi sẽ được JS chèn vào đây -->
-                        <li>Không tìm thấy dữ liệu</li>
-                    </ul>
+                <div class="flex gap-4">
+                    <button onclick="showView('managerDashboardView')" class="w-1/3 bg-slate-200 text-slate-700 p-3 rounded-lg font-bold hover:bg-slate-300">Hủy bỏ</button>
+                    <button onclick="saveNewProcedure()" class="w-2/3 bg-green-600 text-white p-3 rounded-lg font-bold hover:bg-green-700 shadow-lg shadow-green-200">Lưu Quy trình</button>
                 </div>
-            </div>
-
-            <!-- Biểu đồ tuân thủ theo thời gian -->
-            <div class="bg-white p-6 rounded-lg shadow-lg mt-6">
-                <h3 class="font-bold text-lg mb-4">Xu hướng Tuân thủ (7 ngày qua)</h3>
-                <canvas id="complianceChart"></canvas>
             </div>
         </div>
 
-    </div> <!-- Hết container -->
+    </div>
 
     <script>
-        // --- CSDL MÔ PHỎNG ---
-
-        // (1) Định nghĩa các quy trình chuẩn của Bộ Y tế
-        const mohStandards = {
+        // --- 1. DỮ LIỆU & CONFIG ---
+        
+        // Dữ liệu mặc định (Gốc)
+        const defaultStandards = {
             'iv_injection': {
-                title: 'Quy trình: Tiêm tĩnh mạch',
+                title: 'Tiêm tĩnh mạch',
+                iconColor: 'blue',
                 steps: [
-                    { id: 'step1', text: 'Báo và giải thích cho người bệnh/người nhà.', required: true },
-                    { id: 'step2', text: 'Chuẩn bị dụng cụ (bơm tiêm, kim, thuốc, bông cồn...).', required: true },
-                    { id: 'step3', text: 'Điều dưỡng rửa tay thường quy/sát khuẩn tay nhanh.', required: true, isCritical: true, error: 'Bỏ qua vệ sinh tay (Lỗi nghiêm trọng)' },
-                    { id: 'step4', text: 'Thực hiện 5 ĐÚNG (Tên BN, Tên thuốc, Liều, Đường dùng, Thời gian).', required: true, isCritical: true, error: 'Không kiểm tra 5 ĐÚNG' },
-                    { id: 'step5', text: 'Lấy thuốc vào bơm tiêm, đuổi khí.', required: true },
-                    { id: 'step6', text: 'Chọn vị trí tiêm, bộc lộ vùng tiêm.', required: true },
-                    { id: 'step7', text: 'Buộc garo (cách vị trí tiêm 10-15cm).', required: true },
-                    { id: 'step8', text: 'Sát khuẩn vị trí tiêm (xoắn ốc từ trong ra 5cm).', required: true },
-                    { id: 'step9', text: 'Thực hiện kỹ thuật tiêm (đâm kim, hút kiểm tra, bơm thuốc).', required: true },
-                    { id: 'step10', text: 'Tháo garo, rút kim, sát khuẩn lại, đặt bông gòn.', required: true },
-                    { id: 'step11', text: 'Thu dọn dụng cụ, phân loại rác thải y tế.', required: true },
-                    { id: 'step12', text: 'Ghi chép hồ sơ bệnh án.', required: true },
+                    { id: 'iv1', text: 'Thông báo, giải thích cho người bệnh.', required: true },
+                    { id: 'iv2', text: 'Chuẩn bị dụng cụ, thuốc, hộp chống sốc.', required: true },
+                    { id: 'iv3', text: 'Rửa tay/Sát khuẩn tay nhanh.', required: true, isCritical: true, error: 'Bỏ qua rửa tay' },
+                    { id: 'iv4', text: 'Kiểm tra 5 ĐÚNG (Tên, Thuốc, Liều, Đường, Giờ).', required: true, isCritical: true, error: 'Sai quy tắc 5 ĐÚNG' },
+                    { id: 'iv5', text: 'Đuổi khí bơm tiêm.', required: true },
+                    { id: 'iv6', text: 'Buộc garo, sát khuẩn vùng tiêm (xoắn ốc).', required: true },
+                    { id: 'iv7', text: 'Đâm kim, hút kiểm tra máu, bơm thuốc chậm.', required: true },
+                    { id: 'iv8', text: 'Theo dõi sắc mặt người bệnh khi tiêm.', required: true },
+                    { id: 'iv9', text: 'Rút kim, sát khuẩn lại, hủy kim an toàn.', required: true },
+                    { id: 'iv10', text: 'Ghi hồ sơ bệnh án.', required: true },
                 ]
             },
             'dressing_change': {
-                title: 'Quy trình: Thay băng vết mổ',
+                title: 'Thay băng vết mổ',
+                iconColor: 'orange',
                 steps: [
-                    { id: 'step1', text: 'Báo và giải thích, nhận định tình trạng vết mổ.', required: true },
-                    { id: 'step2', text: 'Điều dưỡng rửa tay thường quy/sát khuẩn tay nhanh.', required: true, isCritical: true, error: 'Bỏ qua vệ sinh tay (Lỗi nghiêm trọng)' },
-                    { id: 'step3', text: 'Chuẩn bị bộ dụng cụ thay băng vô khuẩn.', required: true },
-                    { id: 'step4', text: 'Tháo băng cũ (nhẹ nhàng, đúng kỹ thuật).', required: true },
-                    { id: 'step5', text: 'Quan sát, đánh giá tình trạng vết mổ.', required: true },
-                    { id: 'step6', text: 'Rửa vết mổ bằng dung dịch sát khuẩn (từ trong ra ngoài).', required: true },
-                    { id: 'step7', text: 'Thấm khô vết mổ.', required: true },
-                    { id: 'step8', text: 'Đắp gạc mới và băng lại.', required: true },
-                    { id: 'step9', text: 'Thu dọn dụng cụ, phân loại rác thải.', required: true },
-                    { id: 'step10', text: 'Ghi chép hồ sơ (tình trạng, dung dịch rửa...).', required: true },
+                    { id: 'dc1', text: 'Chuẩn bị người bệnh, bộc lộ vùng vết thương.', required: true },
+                    { id: 'dc2', text: 'Sát khuẩn tay trước khi đi găng.', required: true, isCritical: true, error: 'Không sát khuẩn tay' },
+                    { id: 'dc3', text: 'Tháo băng cũ bằng kìm/găng sạch.', required: true },
+                    { id: 'dc4', text: 'Đánh giá tình trạng vết mổ (sưng, nóng, đỏ, đau).', required: true, isCritical: true, error: 'Không đánh giá vết mổ' },
+                    { id: 'dc5', text: 'Mở bộ dụng cụ vô khuẩn đúng kỹ thuật.', required: true },
+                    { id: 'dc6', text: 'Rửa vết thương: Trong ra ngoài, Trên xuống dưới.', required: true },
+                    { id: 'dc7', text: 'Thấm khô, đắp gạc vô khuẩn.', required: true },
+                    { id: 'dc8', text: 'Băng kín vết thương.', required: true },
+                    { id: 'dc9', text: 'Phân loại rác thải đúng quy định.', required: true },
+                    { id: 'dc10', text: 'Ghi phiếu chăm sóc.', required: true },
                 ]
             }
         };
 
-        // (2) Biến toàn cục (Global state)
-        let currentUser = null;
-        let chartInstance = null; // Để lưu trữ biểu đồ
-        // Dữ liệu giả lập cho báo cáo
-        let procedureHistory = [
-            { user: 'nurse_a', procedure: 'iv_injection', score: 11, total: 12, errors: ['Ghi chép hồ sơ bệnh án.'], timestamp: new Date(Date.now() - 3 * 86400000) },
-            { user: 'nurse_b', procedure: 'iv_injection', score: 10, total: 12, errors: ['Buộc garo (cách vị trí tiêm 10-15cm).', 'Thực hiện 5 ĐÚNG (Tên BN, Tên thuốc, Liều, Đường dùng, Thời gian).'], timestamp: new Date(Date.now() - 2 * 86400000) },
-            { user: 'nurse_a', procedure: 'dressing_change', score: 10, total: 10, errors: [], timestamp: new Date(Date.now() - 2 * 86400000) },
-            { user: 'nurse_b', procedure: 'dressing_change', score: 8, total: 10, errors: ['Điều dưỡng rửa tay thường quy/sát khuẩn tay nhanh.', 'Ghi chép hồ sơ (tình trạng, dung dịch rửa...).'], timestamp: new Date(Date.now() - 1 * 86400000) },
-            { user: 'nurse_a', procedure: 'iv_injection', score: 12, total: 12, errors: [], timestamp: new Date(Date.now() - 1 * 86400000) },
+        // Load quy trình từ LocalStorage hoặc dùng Default
+        let mohStandards = JSON.parse(localStorage.getItem('qni_standards')) || defaultStandards;
+
+        // Load lịch sử
+        let procedureHistory = JSON.parse(localStorage.getItem('qni_history')) || [
+            { user: 'nurse_a', procedure: 'iv_injection', score: 9, total: 10, errors: ['Ghi hồ sơ bệnh án.'], timestamp: new Date(Date.now() - 3 * 86400000).toISOString() },
+            { user: 'nurse_b', procedure: 'iv_injection', score: 8, total: 10, errors: ['Sai quy tắc 5 ĐÚNG'], timestamp: new Date(Date.now() - 2 * 86400000).toISOString() }
         ];
 
-        // --- LOGIC ỨNG DỤNG ---
+        let currentUser = null;
+        let chartInstance = null;
 
-        // (1) Điều hướng màn hình
-        function showView(viewId) {
-            // Ẩn tất cả các view
-            document.querySelectorAll('.view').forEach(view => {
-                view.style.display = 'none';
-            });
-            // Hiển thị view mong muốn
-            const targetView = document.getElementById(viewId);
-            if (targetView) {
-                targetView.style.display = 'block';
+        // --- 2. HÀM CORE ---
+
+        function saveStandards() {
+            localStorage.setItem('qni_standards', JSON.stringify(mohStandards));
+        }
+
+        function saveHistory() {
+            localStorage.setItem('qni_history', JSON.stringify(procedureHistory));
+        }
+
+        function resetData() {
+            if(confirm("Hành động này sẽ xóa toàn bộ lịch sử và các quy trình bạn tự thêm. Bạn có chắc không?")) {
+                localStorage.removeItem('qni_history');
+                localStorage.removeItem('qni_standards');
+                location.reload();
             }
         }
 
-        // (2) Xử lý Đăng nhập
-        function login() {
-            const userSelect = document.getElementById('userSelect');
-            currentUser = userSelect.value;
-            const userName = userSelect.options[userSelect.selectedIndex].text;
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+            const target = document.getElementById(viewId);
+            if(target) target.style.display = 'block';
+            
+            // Nếu vào trang Add Procedure, reset form
+            if(viewId === 'addProcedureView') {
+                document.getElementById('newProcTitle').value = '';
+                document.getElementById('newProcSteps').innerHTML = '';
+                addNewStepRow(); // Add 1 empty row
+                addNewStepRow(); // Add 2nd empty row
+            }
+            window.scrollTo(0,0);
+        }
 
-            // Hiển thị thông tin người dùng trên header
-            document.getElementById('userInfo').innerHTML = `
-                <p class="font-semibold">${userName}</p>
-                <a href="#" onclick="logout()" class="text-sm text-red-500 hover:underline">Đăng xuất</a>
+        // --- 3. QUẢN LÝ QUY TRÌNH (DYNAMIC UI) ---
+
+        function renderNurseDashboard() {
+            const grid = document.getElementById('procedureGrid');
+            grid.innerHTML = '';
+
+            Object.keys(mohStandards).forEach(key => {
+                const item = mohStandards[key];
+                // Chọn màu icon
+                let colorClass = 'text-blue-600 bg-blue-100 group-hover:bg-blue-600';
+                let btnClass = 'text-blue-700 hover:bg-blue-600';
+                
+                if (item.iconColor === 'orange') {
+                    colorClass = 'text-orange-600 bg-orange-100 group-hover:bg-orange-600';
+                    btnClass = 'text-orange-700 hover:bg-orange-600';
+                } else if (item.iconColor === 'purple') {
+                    colorClass = 'text-purple-600 bg-purple-100 group-hover:bg-purple-600';
+                    btnClass = 'text-purple-700 hover:bg-purple-600';
+                } else if (item.iconColor === 'green') {
+                    colorClass = 'text-green-600 bg-green-100 group-hover:bg-green-600';
+                    btnClass = 'text-green-700 hover:bg-green-600';
+                }
+
+                const card = document.createElement('div');
+                card.className = 'bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition group';
+                card.innerHTML = `
+                    <div class="w-10 h-10 ${colorClass} group-hover:text-white rounded-full flex items-center justify-center mb-3 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800 truncate" title="${item.title}">${item.title}</h3>
+                    <p class="text-xs text-slate-500 mt-1 mb-4 h-5 truncate">${item.steps.length} bước kiểm tra</p>
+                    <button onclick="startProcedure('${key}')" class="w-full bg-slate-100 ${btnClass} hover:text-white p-2 rounded-lg text-sm font-semibold transition">Thực hiện</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- 4. TÍNH NĂNG ADMIN: THÊM QUY TRÌNH ---
+
+        function addNewStepRow() {
+            const container = document.getElementById('newProcSteps');
+            const rowId = 'row_' + Date.now() + Math.random();
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-center';
+            div.id = rowId;
+            div.innerHTML = `
+                <input type="text" class="step-input flex-1 p-2 border border-slate-300 rounded text-sm focus:outline-blue-500" placeholder="Nhập nội dung bước...">
+                <label class="flex items-center gap-1 cursor-pointer select-none border border-slate-200 p-2 rounded hover:bg-slate-100" title="Đánh dấu là bước quan trọng">
+                    <input type="checkbox" class="step-critical w-4 h-4 text-red-600">
+                    <span class="text-xs text-red-600 font-bold">!</span>
+                </label>
+                <button onclick="document.getElementById('${rowId}').remove()" class="text-slate-400 hover:text-red-500 p-2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
             `;
+            container.appendChild(div);
+        }
 
-            if (currentUser === 'manager') {
-                // Nếu là quản lý, hiển thị dashboard quản lý
+        function saveNewProcedure() {
+            const title = document.getElementById('newProcTitle').value.trim();
+            const stepRows = document.querySelectorAll('#newProcSteps > div');
+            
+            if (!title) return alert("Vui lòng nhập tên quy trình!");
+            
+            const steps = [];
+            let stepCount = 1;
+            
+            stepRows.forEach(row => {
+                const text = row.querySelector('.step-input').value.trim();
+                const isCritical = row.querySelector('.step-critical').checked;
+                
+                if (text) {
+                    steps.push({
+                        id: 'cust_' + Date.now() + '_' + stepCount,
+                        text: text,
+                        required: true,
+                        isCritical: isCritical,
+                        error: isCritical ? `Lỗi: ${text}` : null
+                    });
+                    stepCount++;
+                }
+            });
+
+            if (steps.length === 0) return alert("Vui lòng nhập ít nhất 1 bước thực hiện!");
+
+            // Tạo Key ID
+            const key = 'custom_' + Date.now();
+            
+            // Lưu vào biến global
+            mohStandards[key] = {
+                title: title,
+                iconColor: 'green', // Quy trình custom mặc định màu xanh lá
+                steps: steps
+            };
+
+            // Lưu vào Storage
+            saveStandards();
+
+            alert("Đã thêm quy trình thành công!");
+            
+            // Cập nhật giao diện
+            renderNurseDashboard();
+            showView('managerDashboardView');
+        }
+
+        // --- 5. LOGIC NGƯỜI DÙNG & CHECKLIST ---
+
+        function login() {
+            const select = document.getElementById('userSelect');
+            currentUser = {
+                id: select.value,
+                name: select.options[select.selectedIndex].text.split(':')[1].trim(),
+                role: select.value === 'manager' ? 'manager' : 'nurse'
+            };
+
+            document.getElementById('userInfo').innerHTML = `
+                <span class="font-bold text-slate-700">${currentUser.name}</span>
+                <button onclick="logout()" class="ml-2 text-red-500 hover:underline text-xs">Thoát</button>
+            `;
+            
+            renderNurseDashboard(); // Render lại dashboard mỗi khi login
+
+            if (currentUser.role === 'manager') {
                 updateManagerDashboard();
                 showView('managerDashboardView');
             } else {
-                // Nếu là điều dưỡng, hiển thị dashboard điều dưỡng
                 showView('nurseDashboardView');
             }
         }
 
         function logout() {
             currentUser = null;
-            document.getElementById('userInfo').innerHTML = '';
             showView('loginView');
         }
 
-        // (3) Bắt đầu một quy trình
-        function startProcedure(procedureKey) {
-            const procedure = mohStandards[procedureKey];
-            if (!procedure) return;
+        function startProcedure(key) {
+            const proc = mohStandards[key];
+            if(!proc) return;
 
-            document.getElementById('checklistTitle').textContent = procedure.title;
-            document.getElementById('currentProcedureKey').value = procedureKey;
+            document.getElementById('checklistTitle').textContent = proc.title;
+            document.getElementById('currentProcedureKey').value = key;
+            
+            const container = document.getElementById('checklistSteps');
+            container.innerHTML = '';
 
-            const stepsContainer = document.getElementById('checklistSteps');
-            stepsContainer.innerHTML = ''; // Xóa các bước cũ
-
-            // Tạo HTML cho từng bước
-            procedure.steps.forEach(step => {
-                const stepElement = document.createElement('div');
-                stepElement.className = 'checklist-item p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 flex items-center transition-colors duration-150';
-                stepElement.dataset.stepId = step.id;
-                stepElement.dataset.checked = 'false';
-                stepElement.onclick = () => toggleStep(stepElement);
-
-                stepElement.innerHTML = `
-                    <div class="checkbox-icon w-6 h-6 mr-4 rounded-full border-2 border-gray-300 flex-shrink-0 flex items-center justify-center">
-                        <!-- Icon check sẽ xuất hiện ở đây -->
+            proc.steps.forEach((step) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center p-4 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer transition hover:bg-white hover:shadow-md select-none group';
+                div.onclick = () => {
+                    const checkbox = div.querySelector('div.checkbox');
+                    const isChecked = div.getAttribute('data-checked') === 'true';
+                    
+                    if(isChecked) {
+                        div.setAttribute('data-checked', 'false');
+                        div.classList.remove('border-blue-500', 'bg-blue-50');
+                        checkbox.className = 'checkbox w-6 h-6 border-2 border-slate-300 rounded flex items-center justify-center bg-white transition';
+                        checkbox.innerHTML = '';
+                    } else {
+                        div.setAttribute('data-checked', 'true');
+                        div.classList.add('border-blue-500', 'bg-blue-50');
+                        checkbox.className = 'checkbox w-6 h-6 border-2 border-blue-500 rounded flex items-center justify-center bg-blue-500 transition';
+                        checkbox.innerHTML = '<svg class="text-white w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
+                    }
+                };
+                div.setAttribute('data-step-id', step.id);
+                div.setAttribute('data-checked', 'false');
+                
+                div.innerHTML = `
+                    <div class="checkbox w-6 h-6 border-2 border-slate-300 rounded flex items-center justify-center bg-white mr-4 transition group-hover:border-blue-400"></div>
+                    <div class="flex-1">
+                        <span class="font-medium text-slate-700 text-sm md:text-base">${step.text}</span>
+                        ${step.isCritical ? '<span class="ml-2 text-[10px] bg-red-100 text-red-600 px-1 py-0.5 rounded font-bold uppercase">Quan trọng</span>' : ''}
                     </div>
-                    <span class="flex-1">${step.text}</span>
                 `;
-                stepsContainer.appendChild(stepElement);
+                container.appendChild(div);
             });
 
             showView('procedureChecklistView');
         }
 
-        // (4) Tích chọn một bước
-        function toggleStep(stepElement) {
-            const isChecked = stepElement.dataset.checked === 'true';
-            const checkIconContainer = stepElement.querySelector('.checkbox-icon');
-
-            if (isChecked) {
-                stepElement.dataset.checked = 'false';
-                stepElement.classList.remove('bg-green-50', 'border-green-300');
-                stepElement.classList.add('border-gray-200');
-                checkIconContainer.innerHTML = '';
-                checkIconContainer.classList.remove('bg-green-600', 'border-green-600');
-                checkIconContainer.classList.add('border-gray-300');
-            } else {
-                stepElement.dataset.checked = 'true';
-                stepElement.classList.add('bg-green-50', 'border-green-300');
-                stepElement.classList.remove('border-gray-200');
-                checkIconContainer.classList.add('bg-green-600', 'border-green-600');
-                checkIconContainer.classList.remove('border-gray-300');
-                // Thêm icon check (SVG)
-                checkIconContainer.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`;
-            }
-        }
-
-        // (5) Nộp bảng kiểm & Mô phỏng AI phân tích
         function submitChecklist() {
-            const procedureKey = document.getElementById('currentProcedureKey').value;
-            const procedure = mohStandards[procedureKey];
-            const steps = document.querySelectorAll('.checklist-item');
-
+            const key = document.getElementById('currentProcedureKey').value;
+            const proc = mohStandards[key];
+            const uiSteps = document.querySelectorAll('#checklistSteps > div');
+            
             let score = 0;
-            let total = procedure.steps.length;
-            let missedSteps = [];
-            let missedErrors = [];
+            let missed = [];
+            let criticalErrors = [];
 
-            // "AI" quét qua các bước
-            steps.forEach(stepElement => {
-                const stepId = stepElement.dataset.stepId;
-                const isChecked = stepElement.dataset.checked === 'true';
-                const standardStep = procedure.steps.find(s => s.id === stepId);
+            uiSteps.forEach(div => {
+                const id = div.getAttribute('data-step-id');
+                const checked = div.getAttribute('data-checked') === 'true';
+                const std = proc.steps.find(s => s.id === id);
 
-                if (isChecked) {
+                if(checked) {
                     score++;
-                } else if (standardStep && standardStep.required) {
-                    // Nếu bước này là bắt buộc mà không tích
-                    missedSteps.push(standardStep.text);
-                    if (standardStep.isCritical && standardStep.error) {
-                        missedErrors.push(standardStep.error);
-                    }
+                } else if (std.required) {
+                    missed.push(std.text);
+                    if(std.isCritical) criticalErrors.push(std.error);
                 }
             });
 
-            // Lưu kết quả vào lịch sử
-            procedureHistory.push({
-                user: currentUser,
-                procedure: procedureKey,
+            const record = {
+                user: currentUser.id,
+                procedure: key,
                 score: score,
-                total: total,
-                errors: missedErrors.length > 0 ? missedErrors : (missedSteps.length > 0 ? missedSteps : []), // Ưu tiên lỗi nghiêm trọng
-                timestamp: new Date()
-            });
+                total: proc.steps.length,
+                errors: criticalErrors.length > 0 ? criticalErrors : missed,
+                timestamp: new Date().toISOString()
+            };
+            
+            procedureHistory.push(record);
+            saveHistory();
 
-            // Tạo phản hồi
-            generateAiFeedback(score, total, missedSteps, missedErrors);
+            renderFeedback(score, proc.steps.length, missed, criticalErrors);
             showView('aiFeedbackView');
         }
 
-        // (6) Tạo nội dung phản hồi
-        function generateAiFeedback(score, total, missedSteps, missedErrors) {
-            const feedbackContainer = document.getElementById('feedbackContent');
-            const compliance = Math.round((score / total) * 100);
-            let html = '';
+        function redoProcedure() {
+            const key = document.getElementById('currentProcedureKey').value;
+            startProcedure(key);
+        }
 
-            if (compliance === 100) {
-                html = `
-                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-green-700">TUÂN THỦ TUYỆT ĐỐI</h3>
-                    <p class="mt-2 text-gray-600">Bạn đã thực hiện ${score}/${total} bước chính xác. Cảm ơn bạn đã tuân thủ quy trình!</p>
-                `;
+        function renderFeedback(score, total, missed, critical) {
+            const percent = Math.round((score/total)*100);
+            const content = document.getElementById('feedbackContent');
+            let color = percent === 100 ? 'green' : (percent >= 80 ? 'yellow' : 'red');
+            let title = percent === 100 ? 'TUYỆT VỜI!' : (percent >= 80 ? 'KHÁ TỐT' : 'CẢNH BÁO');
+            
+            // Icon Logic
+            let icon = '';
+            if (critical.length > 0) {
+                 color = 'red';
+                 title = 'LỖI NGHIÊM TRỌNG';
+                 icon = '<svg class="w-16 h-16 text-red-600 mx-auto animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+            } else if (percent === 100) {
+                 icon = '<svg class="w-16 h-16 text-green-500 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>';
             } else {
-                 const isCritical = missedErrors.length > 0;
-                 const color = isCritical ? 'red' : 'yellow';
-                 
-                 html = `
-                    <div class="w-20 h-20 bg-${color}-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-${color}-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-${color}-700">CẦN CẢI THIỆN (Tuân thủ ${compliance}%)</h3>
-                    <p class="mt-2 text-gray-600">Bạn đã thực hiện ${score}/${total} bước. Vui lòng xem lại các điểm sau:</p>
-                    <div class="mt-4 text-left bg-gray-50 p-4 rounded-lg">
-                        <h4 class="font-semibold mb-2">Các bước đã bỏ lỡ:</h4>
-                        <ul class="list-disc list-inside text-sm ${isCritical ? 'text-red-700' : 'text-yellow-800'}">
-                            ${(isCritical ? missedErrors : missedSteps).map(err => `<li>${err}</li>`).join('')}
+                 icon = '<svg class="w-16 h-16 text-yellow-500 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+            }
+
+            content.innerHTML = `
+                <div class="mb-4">${icon}</div>
+                <h3 class="text-2xl font-bold text-${color}-600 mb-2">${title}</h3>
+                <p class="text-4xl font-black text-slate-800 mb-4">${percent}%</p>
+                <p class="text-slate-500 mb-6">Bạn hoàn thành ${score}/${total} bước.</p>
+                
+                ${(missed.length > 0 || critical.length > 0) ? `
+                    <div class="bg-slate-50 text-left p-4 rounded-lg border border-slate-200 max-h-60 overflow-y-auto">
+                        <p class="font-bold text-slate-700 mb-2">Cần khắc phục:</p>
+                        <ul class="space-y-2">
+                            ${critical.map(e => `<li class="text-red-600 font-bold flex items-start gap-2"><span class="mt-1">✖</span> ${e}</li>`).join('')}
+                            ${missed.filter(m => !critical.includes(m)).map(m => `<li class="text-slate-600 text-sm flex items-start gap-2"><span class="mt-1 text-slate-400">•</span> ${m}</li>`).join('')}
                         </ul>
                     </div>
-                    <p class="text-xs mt-4 text-gray-500">Hệ thống AI sẽ tự động cập nhật báo cáo cho quản lý và đề xuất nội dung đào tạo nếu cần thiết.</p>
-                `;
-            }
-
-            feedbackContainer.innerHTML = html;
+                ` : '<p class="text-green-600 font-medium">Hoàn hảo!</p>'}
+            `;
         }
 
-        // (7) Cập nhật Dashboard của Quản lý
+        // --- 6. LOGIC DASHBOARD QUẢN LÝ ---
+
         function updateManagerDashboard() {
-            // -- Phân tích dữ liệu --
-            const commonErrors = {};
-            const compliance = {
-                'iv_injection': { score: 0, total: 0, count: 0 },
-                'dressing_change': { score: 0, total: 0, count: 0 }
-            };
-            const dailyCompliance = {}; // Dữ liệu cho biểu đồ
+            // Stats Calculation
+            let totalChecks = procedureHistory.length;
+            let totalScore = 0;
+            let totalMax = 0;
+            let criticalCount = 0;
+            let errorMap = {};
+            let userStats = {};
 
-            const now = new Date();
-            const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000);
-
-            procedureHistory.forEach(record => {
-                // Tính toán tỷ lệ tuân thủ
-                if (compliance[record.procedure]) {
-                    compliance[record.procedure].score += record.score;
-                    compliance[record.procedure].total += record.total;
-                    compliance[record.procedure].count++;
-                }
-
-                // Đếm lỗi
-                record.errors.forEach(error => {
-                    commonErrors[error] = (commonErrors[error] || 0) + 1;
-                });
-
-                // Tổng hợp dữ liệu biểu đồ (chỉ 7 ngày qua)
-                if (record.timestamp >= sevenDaysAgo) {
-                    const dateString = record.timestamp.toISOString().split('T')[0];
-                    if (!dailyCompliance[dateString]) {
-                        dailyCompliance[dateString] = { score: 0, total: 0 };
-                    }
-                    dailyCompliance[dateString].score += record.score;
-                    dailyCompliance[dateString].total += record.total;
-                }
+            const days = 7;
+            const dates = [...Array(days)].map((_, i) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (days - 1 - i));
+                return d.toISOString().split('T')[0];
             });
+            const chartDataMap = dates.reduce((acc, date) => ({...acc, [date]: {score:0, total:0}}), {});
 
-            // -- Cập nhật Thống kê chung --
-            Object.keys(compliance).forEach(key => {
-                const data = compliance[key];
-                const rate = (data.total > 0) ? Math.round((data.score / data.total) * 100) : 0;
+            procedureHistory.forEach(rec => {
+                totalScore += rec.score;
+                totalMax += rec.total;
                 
-                const rateEl = document.getElementById(`complianceRate-${key}`);
-                const barEl = document.getElementById(`complianceBar-${key}`);
-                
-                if(rateEl) rateEl.textContent = `${rate}% (${data.count} lượt)`;
-                if(barEl) barEl.style.width = `${rate}%`;
-            });
-
-            // -- Cập nhật Lỗi thường gặp --
-            const errorListEl = document.getElementById('commonErrorsList');
-            const sortedErrors = Object.entries(commonErrors).sort((a, b) => b[1] - a[1]);
-            
-            if (sortedErrors.length > 0) {
-                errorListEl.innerHTML = sortedErrors.slice(0, 5).map(([error, count]) => {
-                    return `<li>${error} (${count} lần)</li>`;
-                }).join('');
-            } else {
-                errorListEl.innerHTML = `<li class="text-green-600">Tuyệt vời! Không có lỗi nào được ghi nhận.</li>`;
-            }
-            
-            // -- Cập nhật Biểu đồ --
-            updateChart(dailyCompliance);
-        }
-
-        // (8) Vẽ biểu đồ
-        function updateChart(dailyData) {
-            const ctx = document.getElementById('complianceChart').getContext('2d');
-            
-            // Chuẩn bị dữ liệu cho 7 ngày qua
-            const labels = [];
-            const dataPoints = [];
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date(Date.now() - i * 86400000);
-                const dateString = d.toISOString().split('T')[0];
-                const dayLabel = `${d.getDate()}/${d.getMonth() + 1}`;
-                labels.push(dayLabel);
-                
-                const data = dailyData[dateString];
-                if (data && data.total > 0) {
-                    dataPoints.push(Math.round((data.score / data.total) * 100));
+                // Check critical errors based on history records
+                const procDef = mohStandards[rec.procedure];
+                // Lỗi được lưu trực tiếp trong history ở dạng mảng string
+                // Ta chỉ cần đếm xem có bao nhiêu record có lỗi critical (nhưng ở đây history chỉ lưu text lỗi)
+                // Logic đơn giản hóa: Nếu record.errors có chứa text trùng với text của bước critical trong standard hiện tại
+                if (procDef) {
+                    rec.errors.forEach(errText => {
+                        const isCrit = procDef.steps.some(s => s.isCritical && s.error === errText);
+                        if (isCrit) criticalCount++;
+                        errorMap[errText] = (errorMap[errText] || 0) + 1;
+                    });
                 } else {
-                    dataPoints.push(null); // Cho phép có ngày không có dữ liệu
+                    // Nếu quy trình đã bị xóa, vẫn đếm lỗi từ history
+                    rec.errors.forEach(errText => {
+                        errorMap[errText] = (errorMap[errText] || 0) + 1;
+                    });
                 }
-            }
 
-            if (chartInstance) {
-                chartInstance.destroy(); // Hủy biểu đồ cũ trước khi vẽ mới
-            }
+                if(!userStats[rec.user]) userStats[rec.user] = { count: 0, score: 0, total: 0, name: '' };
+                userStats[rec.user].count++;
+                userStats[rec.user].score += rec.score;
+                userStats[rec.user].total += rec.total;
+                
+                const userNames = { 'nurse_a': 'Nguyễn Thị A', 'nurse_b': 'Trần Văn B' };
+                userStats[rec.user].name = userNames[rec.user] || rec.user;
 
+                const dateKey = rec.timestamp.split('T')[0];
+                if(chartDataMap[dateKey]) {
+                    chartDataMap[dateKey].score += rec.score;
+                    chartDataMap[dateKey].total += rec.total;
+                }
+            });
+
+            document.getElementById('statTotalCount').textContent = totalChecks;
+            document.getElementById('statAvgCompliance').textContent = totalMax > 0 ? Math.round((totalScore/totalMax)*100) + '%' : '0%';
+            document.getElementById('statCriticalErrors').textContent = criticalCount;
+
+            // Leaderboard
+            const leaderboardEl = document.getElementById('leaderboardList');
+            leaderboardEl.innerHTML = '';
+            const sortedUsers = Object.values(userStats).sort((a,b) => (b.score/b.total) - (a.score/a.total));
+            
+            if(sortedUsers.length > 0) document.getElementById('statBestNurse').textContent = sortedUsers[0].name;
+
+            sortedUsers.forEach((u, idx) => {
+                const percent = Math.round((u.score/u.total)*100);
+                const colorClass = idx === 0 ? 'bg-yellow-100 border-yellow-300' : 'bg-white border-slate-100';
+                leaderboardEl.innerHTML += `
+                    <div class="flex items-center justify-between p-3 rounded-lg border ${colorClass}">
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg w-6 text-center">${idx + 1}</span>
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm">${u.name}</p>
+                                <p class="text-xs text-slate-500">${u.count} lượt</p>
+                            </div>
+                        </div>
+                        <span class="font-bold ${percent >= 90 ? 'text-green-600' : 'text-slate-600'}">${percent}%</span>
+                    </div>
+                `;
+            });
+
+            // Errors
+            const errorsEl = document.getElementById('commonErrorsList');
+            const sortedErrors = Object.entries(errorMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            errorsEl.innerHTML = sortedErrors.length 
+                ? sortedErrors.map(([err, count]) => `<li>${err} <span class="text-slate-400 text-xs">(${count})</span></li>`).join('') 
+                : '<li class="text-green-600 list-none">Chưa có lỗi nào.</li>';
+
+            // Chart
+            const ctx = document.getElementById('complianceChart').getContext('2d');
+            const labels = dates;
+            const dataPoints = dates.map(date => {
+                const d = chartDataMap[date];
+                return d.total > 0 ? Math.round((d.score/d.total)*100) : null;
+            });
+
+            if(chartInstance) chartInstance.destroy();
             chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: labels.map(l => l.split('-').slice(1).reverse().join('/')),
                     datasets: [{
-                        label: 'Tỷ lệ Tuân thủ Trung bình (%)',
+                        label: 'Tuân thủ (%)',
                         data: dataPoints,
-                        borderColor: 'rgb(59, 130, 246)', // Màu xanh blue-600
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
                         fill: true,
-                        tension: 0.3, // Làm mượt đường
-                        spanGaps: true // Nối qua các điểm null
+                        tension: 0.4
                     }]
                 },
                 options: {
                     responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%'
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `Tuân thủ: ${context.parsed.y}%`;
-                                }
-                            }
-                        }
-                    }
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 100 } },
+                    plugins: { legend: { display: false } }
                 }
             });
         }
 
-        // --- KHỞI ĐỘNG ỨNG DỤNG ---
-        // Bắt đầu bằng cách hiển thị màn hình đăng nhập
-        showView('loginView');
+        // --- INIT ---
+        if(procedureHistory.length === 0 && !localStorage.getItem('qni_standards')) showView('loginView');
+        else showView('loginView');
 
     </script>
 </body>
